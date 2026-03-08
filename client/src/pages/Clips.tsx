@@ -735,7 +735,9 @@ export default function Clips() {
       if (offset === 0) setAllClips(shuffleArray(clips));
       else setAllClips((prev) => {
         const ids = new Set(prev.map((c) => c.id));
-        return [...prev, ...clips.filter((c) => !ids.has(c.id))];
+        const newClips = clips.filter((c) => !ids.has(c.id));
+        // Shuffle new clips before adding to ensure random order from different creators
+        return [...prev, ...shuffleArray(newClips)];
       });
     }
   }, [clips, offset]);
