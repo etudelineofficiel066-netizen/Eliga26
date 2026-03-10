@@ -10,34 +10,30 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, ShieldOff } from "lucide-react";
+import { Trophy, ShieldOff, Globe } from "lucide-react";
 import { PWAInstallButton } from "@/components/PWAInstallButton";
+import { SearchableCountrySelect } from "@/components/SearchableCountrySelect";
+import { useLocale } from "@/lib/locale";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Nom d'utilisateur requis"),
-  password: z.string().min(1, "Mot de passe requis"),
+  username: z.string().min(1),
+  password: z.string().min(1),
 });
 
 const registerSchema = z.object({
-  username: z.string().min(3, "Au moins 3 caractères"),
-  pseudo: z.string().min(2, "Au moins 2 caractères"),
-  password: z.string().min(6, "Au moins 6 caractères"),
-  phone: z.string().min(8, "Numéro invalide"),
-  country: z.string().min(1, "Pays requis"),
-  region: z.string().min(1, "Région requise"),
+  username: z.string().min(3),
+  pseudo: z.string().min(2),
+  password: z.string().min(6),
+  phone: z.string().min(8),
+  country: z.string().min(1),
+  region: z.string().min(1),
 });
-
-const COUNTRIES = [
-  "Algérie", "Maroc", "Tunisie", "Égypte", "Sénégal", "Côte d'Ivoire", "Cameroun",
-  "Ghana", "Nigeria", "Mali", "Burkina Faso", "Guinée", "France", "Belgique",
-  "Espagne", "Portugal", "Italie", "Allemagne", "Angleterre", "Autre"
-];
 
 export default function Home() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { language, setLanguage, t } = useLocale();
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -92,9 +88,9 @@ export default function Home() {
             <h1 className="text-5xl font-extrabold text-white tracking-tight drop-shadow-sm">eLIGA</h1>
           </div>
 
-          <p className="text-lg text-white/90 font-medium mb-2">La plateforme eFootball des champions</p>
+          <p className="text-lg text-white/90 font-medium mb-2">{t("app.tagline")}</p>
           <p className="text-sm text-white/70 mb-6 hidden lg:block">
-            Organisez vos tournois, suivez vos statistiques et défiez vos amis. Compétition sérieuse, communauté passionnée.
+            {t("app.description")}
           </p>
 
           {/* Hero image */}
@@ -113,15 +109,26 @@ export default function Home() {
       {/* Right / Auth panel */}
       <div className="flex-1 flex items-center justify-center p-5 sm:p-8 lg:max-w-lg lg:mx-auto lg:w-full">
         <div className="w-full max-w-md">
-          <div className="mb-6 text-center lg:text-left">
-            <h2 className="text-2xl font-bold text-foreground">Bienvenue sur eLIGA</h2>
-            <p className="text-muted-foreground text-sm mt-1">Connectez-vous ou créez votre compte joueur</p>
+          <div className="mb-6 text-center lg:text-left flex items-start justify-between">
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-foreground">{t("home.welcome")}</h2>
+              <p className="text-muted-foreground text-sm mt-1">{t("home.subtitle")}</p>
+            </div>
+            <button
+              onClick={() => setLanguage(language === "fr" ? "en" : "fr")}
+              className="ml-2 p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition"
+              title="Toggle language"
+              data-testid="button-toggle-language"
+            >
+              <Globe className="w-4 h-4" />
+              <span className="text-xs font-bold mt-1">{language === "fr" ? "EN" : "FR"}</span>
+            </button>
           </div>
 
           <Tabs defaultValue="login">
             <TabsList className="w-full mb-5">
-              <TabsTrigger value="login" className="flex-1" data-testid="tab-login">Se connecter</TabsTrigger>
-              <TabsTrigger value="register" className="flex-1" data-testid="tab-register">Créer un compte</TabsTrigger>
+              <TabsTrigger value="login" className="flex-1" data-testid="tab-login">{t("login.label")}</TabsTrigger>
+              <TabsTrigger value="register" className="flex-1" data-testid="tab-register">{t("register.label")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -142,16 +149,16 @@ export default function Home() {
                     <form onSubmit={loginForm.handleSubmit(d => { setBlockedInfo(null); loginMutation.mutate(d); })} className="space-y-4">
                       <FormField control={loginForm.control} name="username" render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Nom d'utilisateur</FormLabel>
+                          <FormLabel>{t("login.username")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="votre_username" data-testid="input-login-username" autoComplete="username" {...field} />
+                            <Input placeholder={language === "fr" ? "votre_username" : "your_username"} data-testid="input-login-username" autoComplete="username" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
                       <FormField control={loginForm.control} name="password" render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Mot de passe</FormLabel>
+                          <FormLabel>{t("login.password")}</FormLabel>
                           <FormControl>
                             <Input type="password" placeholder="••••••••" data-testid="input-login-password" autoComplete="current-password" {...field} />
                           </FormControl>
@@ -159,7 +166,7 @@ export default function Home() {
                         </FormItem>
                       )} />
                       <Button type="submit" className="w-full" disabled={loginMutation.isPending} data-testid="button-login">
-                        {loginMutation.isPending ? "Connexion en cours…" : "Se connecter"}
+                        {loginMutation.isPending ? t("login.connecting") : t("login.button")}
                       </Button>
                     </form>
                   </Form>
@@ -175,18 +182,18 @@ export default function Home() {
                       <div className="grid grid-cols-2 gap-3">
                         <FormField control={registerForm.control} name="username" render={({ field }) => (
                           <FormItem className="col-span-2 sm:col-span-1">
-                            <FormLabel>Nom d'utilisateur</FormLabel>
+                            <FormLabel>{t("register.username")}</FormLabel>
                             <FormControl>
-                              <Input placeholder="username_efootball" data-testid="input-reg-username" autoComplete="username" {...field} />
+                              <Input placeholder={language === "fr" ? "username_efootball" : "username_efootball"} data-testid="input-reg-username" autoComplete="username" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
                         <FormField control={registerForm.control} name="pseudo" render={({ field }) => (
                           <FormItem className="col-span-2 sm:col-span-1">
-                            <FormLabel>Pseudo en jeu</FormLabel>
+                            <FormLabel>{t("register.pseudo")}</FormLabel>
                             <FormControl>
-                              <Input placeholder="MonPseudo" data-testid="input-reg-pseudo" {...field} />
+                              <Input placeholder={language === "fr" ? "MonPseudo" : "MyNickname"} data-testid="input-reg-pseudo" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -194,7 +201,7 @@ export default function Home() {
                       </div>
                       <FormField control={registerForm.control} name="password" render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Mot de passe</FormLabel>
+                          <FormLabel>{t("register.password")}</FormLabel>
                           <FormControl>
                             <Input type="password" placeholder="••••••••" data-testid="input-reg-password" autoComplete="new-password" {...field} />
                           </FormControl>
@@ -203,9 +210,9 @@ export default function Home() {
                       )} />
                       <FormField control={registerForm.control} name="phone" render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Téléphone</FormLabel>
+                          <FormLabel>{t("register.phone")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="+213 XXX XXX XXX" data-testid="input-reg-phone" type="tel" {...field} />
+                            <Input placeholder="+1 XXX XXX XXXX" data-testid="input-reg-phone" type="tel" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -213,32 +220,29 @@ export default function Home() {
                       <div className="grid grid-cols-2 gap-3">
                         <FormField control={registerForm.control} name="country" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Pays</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-country">
-                                  <SelectValue placeholder="Pays" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
+                            <FormLabel>{t("register.country")}</FormLabel>
+                            <FormControl>
+                              <SearchableCountrySelect
+                                value={field.value}
+                                onChange={field.onChange}
+                                placeholder={t("register.country")}
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
                         <FormField control={registerForm.control} name="region" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Région</FormLabel>
+                            <FormLabel>{t("register.region")}</FormLabel>
                             <FormControl>
-                              <Input placeholder="Votre région" data-testid="input-reg-region" {...field} />
+                              <Input placeholder={language === "fr" ? "Votre région" : "Your region"} data-testid="input-reg-region" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
                       </div>
                       <Button type="submit" className="w-full" disabled={registerMutation.isPending} data-testid="button-register">
-                        {registerMutation.isPending ? "Création en cours…" : "Créer mon compte"}
+                        {registerMutation.isPending ? t("register.creating") : t("register.button")}
                       </Button>
                     </form>
                   </Form>
@@ -248,7 +252,7 @@ export default function Home() {
           </Tabs>
 
           <p className="text-center text-xs text-muted-foreground mt-6">
-            © {new Date().getFullYear()} eLIGA · Tous droits réservés<br />
+            © {new Date().getFullYear()} eLIGA · {t("common.copyright")}<br />
             <span className="font-medium">Maodo ka</span>
           </p>
         </div>

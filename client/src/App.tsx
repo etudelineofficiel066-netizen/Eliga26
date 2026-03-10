@@ -11,6 +11,7 @@ import { PWAInstallButton } from "@/components/PWAInstallButton";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OnboardingTutorial } from "@/components/OnboardingTutorial";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { LocaleProvider, useLocale } from "@/lib/locale";
 import NotFound from "@/pages/not-found";
 import { useNotificationPoller } from "@/hooks/use-notification-poller";
 
@@ -74,27 +75,31 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import Clips from "@/pages/Clips";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const PAGE_TITLES: Record<string, string> = {
-  "/": "Tableau de bord",
-  "/dashboard": "Tableau de bord",
-  "/tournaments": "Mes tournois",
-  "/create-tournament": "Créer un tournoi",
-  "/search": "Rechercher",
-  "/messages": "Messages",
-  "/friends": "Amis",
-  "/matches": "Mes matchs",
-  "/stats": "Statistiques",
-  "/profile": "Mon profil",
-  "/market": "Marché",
-  "/challenges": "Défis",
-  "/clips": "eLIGA Clips",
-};
+function getPageTitles(t: (key: string) => string): Record<string, string> {
+  return {
+    "/": t("header.dashboard"),
+    "/dashboard": t("header.dashboard"),
+    "/tournaments": t("header.tournaments"),
+    "/create-tournament": t("header.create"),
+    "/search": t("header.search"),
+    "/messages": t("header.messages"),
+    "/friends": t("header.friends"),
+    "/matches": t("header.matches"),
+    "/stats": t("header.stats"),
+    "/profile": t("header.profile"),
+    "/market": t("header.market"),
+    "/challenges": t("header.challenges"),
+    "/clips": t("header.clips"),
+  };
+}
 
 function AppHeader() {
   const [location] = useLocation();
+  const { t } = useLocale();
+  const PAGE_TITLES = getPageTitles(t);
   const pageTitle =
     PAGE_TITLES[location] ??
-    (location.startsWith("/tournaments/") ? "Tournoi" : "eLIGA");
+    (location.startsWith("/tournaments/") ? "Tournament" : "eLIGA");
 
   return (
     <header className="flex items-center gap-3 px-4 h-12 border-b border-border flex-shrink-0 bg-card sticky top-0 z-40">
@@ -197,12 +202,14 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <AuthProvider>
-            <GlobalNotificationPoller />
-            <AppContent />
-            <PWAInstallPrompt />
-            <Toaster />
-          </AuthProvider>
+          <LocaleProvider>
+            <AuthProvider>
+              <GlobalNotificationPoller />
+              <AppContent />
+              <PWAInstallPrompt />
+              <Toaster />
+            </AuthProvider>
+          </LocaleProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>
