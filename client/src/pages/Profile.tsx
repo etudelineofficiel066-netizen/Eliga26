@@ -16,6 +16,7 @@ import { useResetOnboarding } from "@/components/OnboardingTutorial";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
 import { useNotificationPoller } from "@/hooks/use-notification-poller";
 import { playNotificationSound } from "@/lib/notification-sound";
+import { useLocale } from "@/lib/locale";
 
 function compressImage(file: File, maxPx = 300, quality = 0.82): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -43,7 +44,7 @@ function compressImage(file: File, maxPx = 300, quality = 0.82): Promise<string>
       );
       resolve(canvas.toDataURL("image/jpeg", quality));
     };
-    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Impossible de charger l'image")); };
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Image load failed")); };
     img.src = objectUrl;
   });
 }
@@ -53,6 +54,7 @@ export default function Profile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useLocale();
 
   const [editing, setEditing] = useState(false);
   const [pseudo, setPseudo] = useState(user?.pseudo ?? "");
@@ -97,17 +99,17 @@ export default function Profile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       setEditing(false);
-      toast({ title: "Profil mis à jour !" });
+      toast({ title: t("profile.updated") });
     },
     onError: (e: any) =>
-      toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+      toast({ title: t("common.error"), description: e.message, variant: "destructive" }),
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      toast({ title: "Fichier invalide", description: "Veuillez choisir une image.", variant: "destructive" });
+      toast({ title: t("profile.invalid_file"), description: t("profile.invalid_file_msg"), variant: "destructive" });
       return;
     }
     setUploadingPhoto(true);
@@ -115,7 +117,7 @@ export default function Profile() {
       const compressed = await compressImage(file);
       setAvatarUrl(compressed);
     } catch {
-      toast({ title: "Erreur", description: "Impossible de traiter l'image.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("profile.image_error"), variant: "destructive" });
     } finally {
       setUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -137,8 +139,8 @@ export default function Profile() {
           <User className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Mon profil</h1>
-          <p className="text-sm text-muted-foreground">Gérez votre identité sur eLIGA</p>
+          <h1 className="text-2xl font-bold">{t("profile.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("profile.subtitle")}</p>
         </div>
       </div>
 
@@ -182,7 +184,7 @@ export default function Profile() {
                     data-testid="button-choose-photo"
                   >
                     <Camera className="w-3 h-3" />
-                    {uploadingPhoto ? "Chargement..." : "Changer la photo"}
+                    {uploadingPhoto ? t("profile.loading_photo") : t("profile.change_photo")}
                   </button>
                   {avatarUrl && (
                     <button
@@ -192,7 +194,7 @@ export default function Profile() {
                       data-testid="button-remove-photo"
                     >
                       <ImageOff className="w-3 h-3" />
-                      Retirer
+                      {t("profile.remove_photo")}
                     </button>
                   )}
                 </div>
@@ -213,20 +215,20 @@ export default function Profile() {
               {editing ? (
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Pseudo</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t("profile.pseudo_label")}</label>
                     <Input
                       value={pseudo}
                       onChange={e => setPseudo(e.target.value)}
-                      placeholder="Votre pseudo"
+                      placeholder={t("profile.pseudo_placeholder")}
                       data-testid="input-pseudo"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Bio</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t("profile.bio_label")}</label>
                     <Textarea
                       value={bio}
                       onChange={e => setBio(e.target.value)}
-                      placeholder="Parlez de vous..."
+                      placeholder={t("profile.bio_placeholder")}
                       rows={3}
                       data-testid="input-bio"
                     />
@@ -240,7 +242,7 @@ export default function Profile() {
                       data-testid="button-save-profile"
                     >
                       <Save className="w-3.5 h-3.5 mr-1.5" />
-                      {updateMutation.isPending ? "Sauvegarde..." : "Sauvegarder"}
+                      {updateMutation.isPending ? t("profile.saving") : t("profile.save")}
                     </Button>
                     <Button
                       size="sm"
@@ -255,7 +257,7 @@ export default function Profile() {
                       data-testid="button-cancel-edit"
                     >
                       <X className="w-3.5 h-3.5 mr-1.5" />
-                      Annuler
+                      {t("profile.cancel")}
                     </Button>
                   </div>
                 </div>
@@ -310,22 +312,22 @@ export default function Profile() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-bold text-sm">Mes pièces</p>
+                <p className="font-bold text-sm">{t("profile.coins_title")}</p>
                 <span className="text-sm font-bold text-yellow-500" data-testid="profile-coin-balance">
                   {coinBalance?.coins ?? 0} 🪙
                 </span>
                 {(coinBalance?.bonusStars ?? 0) > 0 && (
                   <span className="text-sm font-bold text-amber-500">
-                    · {coinBalance?.bonusStars} ⭐ bonus
+                    · {coinBalance?.bonusStars} ⭐ {t("profile.bonus_stars")}
                   </span>
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Achetez des pièces pour obtenir des étoiles bonus et accéder aux tournois Élite
+                {t("profile.coins_subtitle")}
               </p>
               {(coinBalance?.coins ?? 0) >= 300 && (
                 <p className="text-xs font-semibold text-green-600 mt-1">
-                  ✅ Vous pouvez acheter une étoile bonus maintenant !
+                  {t("profile.coins_eligible")}
                 </p>
               )}
             </div>
@@ -337,7 +339,7 @@ export default function Profile() {
       {/* Stats summary */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Statistiques</CardTitle>
+          <CardTitle className="text-base">{t("profile.stats_title")}</CardTitle>
         </CardHeader>
         <CardContent>
           {statsLoading ? (
@@ -349,26 +351,26 @@ export default function Profile() {
               <div className="grid grid-cols-4 gap-3 mb-4">
                 <div className="text-center p-3 bg-muted/50 rounded-lg" data-testid="profile-stat-played">
                   <div className="text-xl font-bold">{stats?.played ?? 0}</div>
-                  <div className="text-xs text-muted-foreground">Matchs</div>
+                  <div className="text-xs text-muted-foreground">{t("profile.stat_played")}</div>
                 </div>
                 <div className="text-center p-3 bg-green-500/10 rounded-lg" data-testid="profile-stat-wins">
                   <div className="text-xl font-bold text-green-600">{stats?.wins ?? 0}</div>
-                  <div className="text-xs text-muted-foreground">Victoires</div>
+                  <div className="text-xs text-muted-foreground">{t("profile.stat_wins")}</div>
                 </div>
                 <div className="text-center p-3 bg-amber-500/10 rounded-lg" data-testid="profile-stat-draws">
                   <div className="text-xl font-bold text-amber-600">{stats?.draws ?? 0}</div>
-                  <div className="text-xs text-muted-foreground">Nuls</div>
+                  <div className="text-xs text-muted-foreground">{t("profile.stat_draws")}</div>
                 </div>
                 <div className="text-center p-3 bg-red-500/10 rounded-lg" data-testid="profile-stat-losses">
                   <div className="text-xl font-bold text-red-500">{stats?.losses ?? 0}</div>
-                  <div className="text-xs text-muted-foreground">Défaites</div>
+                  <div className="text-xs text-muted-foreground">{t("profile.stat_losses")}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                   <div className="h-full bg-green-500 rounded-full" style={{ width: `${winRate}%` }} />
                 </div>
-                <span className="text-sm font-medium text-green-600">{winRate}% de victoires</span>
+                <span className="text-sm font-medium text-green-600">{winRate}{t("profile.win_rate")}</span>
               </div>
             </>
           )}
@@ -379,22 +381,22 @@ export default function Profile() {
       {tournaments && tournaments.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Mes tournois créés ({tournaments.length})</CardTitle>
+            <CardTitle className="text-base">{t("profile.my_tournaments")} ({tournaments.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {tournaments.slice(0, 5).map(t => (
+              {tournaments.slice(0, 5).map(t2 => (
                 <div
-                  key={t.id}
+                  key={t2.id}
                   className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50"
-                  data-testid={`profile-tournament-${t.id}`}
+                  data-testid={`profile-tournament-${t2.id}`}
                 >
                   <div className="flex items-center gap-2">
                     <Trophy className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{t.name}</span>
+                    <span className="text-sm font-medium">{t2.name}</span>
                   </div>
                   <Badge variant="outline" className="text-xs capitalize">
-                    {t.status === "waiting" ? "En attente" : t.status === "in_progress" ? "En cours" : "Terminé"}
+                    {t2.status === "waiting" ? t("profile.tournament_waiting") : t2.status === "in_progress" ? t("profile.tournament_in_progress") : t("profile.tournament_finished")}
                   </Badge>
                 </div>
               ))}
@@ -412,11 +414,9 @@ export default function Profile() {
   );
 }
 
-// Detect iOS device (iPhone / iPad)
 function getIOSInfo() {
   const ua = navigator.userAgent;
   const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  // Standalone = installed as PWA via "Add to Home Screen"
   const isStandalone =
     ("standalone" in navigator && (navigator as any).standalone === true) ||
     window.matchMedia("(display-mode: standalone)").matches;
@@ -426,36 +426,36 @@ function getIOSInfo() {
 function PushNotificationsCard() {
   const { isSupported, permission, isEnabled, isRequesting, requestPermission, disable } = useNotificationPoller();
   const { toast } = useToast();
+  const { t } = useLocale();
   const { isIOS, isStandalone } = getIOSInfo();
 
   const handleToggle = async () => {
     if (isEnabled) {
       disable();
-      toast({ title: "Notifications désactivées" });
+      toast({ title: t("profile.notif_disabled") });
     } else if (permission === "denied") {
       toast({
-        title: "Notifications bloquées",
-        description: "Allez dans les paramètres de votre navigateur → Notifications → Autorisez ce site.",
+        title: t("profile.notif_blocked_title"),
+        description: t("profile.notif_blocked_desc"),
         variant: "destructive",
       });
     } else {
       const ok = await requestPermission();
       if (ok) {
         toast({
-          title: "Notifications activées !",
-          description: "Vous recevrez des alertes pour vos matchs, scores et tournois.",
+          title: t("profile.notif_enabled_title"),
+          description: t("profile.notif_enabled_desc"),
         });
       } else {
         toast({
-          title: "Permission refusée",
-          description: "Autorisez les notifications dans les paramètres de votre navigateur.",
+          title: t("profile.notif_denied"),
+          description: t("profile.notif_denied_desc"),
           variant: "destructive",
         });
       }
     }
   };
 
-  // iOS in Safari (not installed as PWA) — notifications impossible without installation
   if (isIOS && !isStandalone) {
     return (
       <Card data-testid="push-notifications-card-ios">
@@ -465,41 +465,34 @@ function PushNotificationsCard() {
               <Bell className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <p className="text-sm font-semibold">Notifications — iPhone</p>
+              <p className="text-sm font-semibold">{t("profile.notif_iphone_title")}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Apple exige que l'app soit installée sur votre écran d'accueil pour recevoir des notifications.
+                {t("profile.notif_iphone_desc")}
               </p>
             </div>
           </div>
           <div className="bg-muted/60 rounded-xl p-3 space-y-2">
-            <p className="text-xs font-medium text-foreground">Comment installer eLIGA sur votre iPhone :</p>
+            <p className="text-xs font-medium text-foreground">{t("profile.notif_ios_how")}</p>
             <ol className="text-xs text-muted-foreground space-y-1.5 list-none">
-              <li className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
-                <span>Appuyez sur le bouton <strong>Partager</strong> <span className="font-mono bg-muted px-1 rounded">⎙</span> en bas de Safari</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-                <span>Sélectionnez <strong>"Sur l'écran d'accueil"</strong></span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-                <span>Appuyez sur <strong>"Ajouter"</strong> en haut à droite</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
-                <span>Ouvrez eLIGA depuis l'écran d'accueil, puis revenez ici activer les notifications</span>
-              </li>
+              {[
+                t("profile.notif_ios_step1"),
+                t("profile.notif_ios_step2"),
+                t("profile.notif_ios_step3"),
+                t("profile.notif_ios_step4"),
+              ].map((step, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                  <span>{step}</span>
+                </li>
+              ))}
             </ol>
           </div>
-          <p className="text-[10px] text-muted-foreground text-center">Requiert iOS 16.4 ou plus récent</p>
+          <p className="text-[10px] text-muted-foreground text-center">{t("profile.notif_ios_req")}</p>
         </CardContent>
       </Card>
     );
   }
 
-  // iOS installed as PWA — show normal card with iOS note
-  // Non-iOS — normal card
   if (!isSupported) return null;
 
   return (
@@ -510,13 +503,13 @@ function PushNotificationsCard() {
             {isEnabled ? <BellRing className="w-5 h-5 text-green-600" /> : <Bell className="w-5 h-5 text-muted-foreground" />}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold">Notifications</p>
+            <p className="text-sm font-semibold">{t("profile.notif_title")}</p>
             <p className="text-xs text-muted-foreground">
               {permission === "denied"
-                ? "Bloquées — à autoriser dans les paramètres du navigateur"
+                ? t("profile.notif_blocked")
                 : isEnabled
-                ? "Actives — alertes matchs, scores et tournois"
-                : "Recevez des alertes pour vos matchs et tournois"}
+                ? t("profile.notif_active")
+                : t("profile.notif_inactive")}
             </p>
           </div>
           <Button
@@ -530,8 +523,8 @@ function PushNotificationsCard() {
             {isRequesting
               ? <Loader2 className="w-4 h-4 animate-spin" />
               : isEnabled
-              ? <><BellOff className="w-4 h-4 mr-1.5" />Désactiver</>
-              : <><Bell className="w-4 h-4 mr-1.5" />Activer</>}
+              ? <><BellOff className="w-4 h-4 mr-1.5" />{t("profile.notif_disable")}</>
+              : <><Bell className="w-4 h-4 mr-1.5" />{t("profile.notif_enable")}</>}
           </Button>
         </div>
         {isEnabled && (
@@ -541,12 +534,12 @@ function PushNotificationsCard() {
             data-testid="button-test-sound"
           >
             <BellRing className="w-3.5 h-3.5" />
-            Tester la sonnerie
+            {t("profile.notif_test_sound")}
           </button>
         )}
         {isIOS && isStandalone && (
           <p className="text-[10px] text-muted-foreground text-center">
-            iPhone — requiert iOS 16.4+
+            {t("profile.notif_ios_req2")}
           </p>
         )}
       </CardContent>
@@ -560,13 +553,13 @@ function PWAInstallCard() {
   const { canInstall, isInstalled, isIOS, isInstalling, install } = usePWAInstall();
   const [showIOSSteps, setShowIOSSteps] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const { t } = useLocale();
 
   const handleInstall = async () => {
     if (isIOS) {
       setShowIOSSteps(true);
       return;
     }
-    // Reset dismissed state so the auto-prompt can show again if needed
     localStorage.removeItem(PWA_DISMISSED_KEY);
     if (canInstall) {
       await install();
@@ -582,8 +575,8 @@ function PWAInstallCard() {
           <Smartphone className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-white">Installer eLIGA</p>
-          <p className="text-xs text-white/70">Application disponible sur votre appareil</p>
+          <p className="text-sm font-bold text-white">{t("profile.pwa_title")}</p>
+          <p className="text-xs text-white/70">{t("profile.pwa_subtitle")}</p>
         </div>
         <button
           onClick={() => setDismissed(true)}
@@ -599,9 +592,9 @@ function PWAInstallCard() {
           <div className="flex flex-col gap-3">
             <div className="grid grid-cols-3 gap-2 text-xs text-center">
               {[
-                { icon: "⚡", label: "Lancement rapide" },
-                { icon: "📴", label: "Mode hors-ligne" },
-                { icon: "🔔", label: "Notifications" },
+                { icon: "⚡", label: t("profile.pwa_fast") },
+                { icon: "📴", label: t("profile.pwa_offline") },
+                { icon: "🔔", label: t("profile.pwa_notif") },
               ].map((f, i) => (
                 <div key={i} className="flex flex-col items-center gap-1 bg-muted/50 rounded-lg p-2">
                   <span className="text-lg">{f.icon}</span>
@@ -618,7 +611,7 @@ function PWAInstallCard() {
                 data-testid="button-pwa-profile-install"
               >
                 <Download className="w-4 h-4" />
-                {isInstalling ? "Installation…" : "Installer l'application"}
+                {isInstalling ? t("profile.pwa_installing") : t("profile.pwa_install")}
               </Button>
             ) : isIOS ? (
               <Button
@@ -627,32 +620,32 @@ function PWAInstallCard() {
                 data-testid="button-pwa-ios-guide"
               >
                 <Share className="w-4 h-4" />
-                Voir comment installer (iOS)
+                {t("profile.pwa_ios_guide")}
               </Button>
             ) : (
               <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2.5 text-xs text-amber-700 dark:text-amber-400">
-                <p className="font-semibold mb-1">L'installation n'est pas encore disponible</p>
-                <p>Ouvrez ce site dans <strong>Chrome</strong> (Android) ou <strong>Safari</strong> (iOS) depuis votre téléphone pour pouvoir l'installer. L'option apparaît après une première visite.</p>
+                <p className="font-semibold mb-1">{t("profile.pwa_not_available_title")}</p>
+                <p>{t("profile.pwa_not_available_desc")}</p>
               </div>
             )}
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <p className="text-sm font-semibold">Pour installer sur iPhone / iPad :</p>
+            <p className="text-sm font-semibold">{t("profile.pwa_ios_steps_title")}</p>
             <ol className="space-y-2.5 text-sm text-muted-foreground">
               {[
-                <span key="1">Appuyez sur <Share className="w-4 h-4 inline mx-0.5 text-blue-500" /> <strong>Partager</strong> en bas de Safari</span>,
-                <span key="2">Faites défiler et appuyez sur <strong>"Sur l'écran d'accueil"</strong></span>,
-                <span key="3">Confirmez en appuyant sur <strong>"Ajouter"</strong> en haut à droite</span>,
+                t("profile.pwa_ios_s1"),
+                t("profile.pwa_ios_s2"),
+                t("profile.pwa_ios_s3"),
               ].map((step, i) => (
                 <li key={i} className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-                  {step}
+                  <span>{step}</span>
                 </li>
               ))}
             </ol>
             <Button variant="outline" size="sm" onClick={() => setShowIOSSteps(false)} data-testid="button-pwa-ios-back">
-              Retour
+              {t("profile.pwa_back")}
             </Button>
           </div>
         )}
@@ -664,11 +657,11 @@ function PWAInstallCard() {
 function TutorialReplayCard() {
   const resetOnboarding = useResetOnboarding();
   const [replaying, setReplaying] = useState(false);
+  const { t } = useLocale();
 
   const handleReplay = () => {
     resetOnboarding();
     setReplaying(true);
-    // Small delay then reload to trigger the tutorial
     setTimeout(() => window.location.reload(), 100);
   };
 
@@ -679,8 +672,8 @@ function TutorialReplayCard() {
           <BookOpen className="w-5 h-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold">Guide de démarrage</p>
-          <p className="text-xs text-muted-foreground">Revoir le tutoriel d'introduction à eLIGA</p>
+          <p className="text-sm font-semibold">{t("profile.tutorial_title")}</p>
+          <p className="text-xs text-muted-foreground">{t("profile.tutorial_subtitle")}</p>
         </div>
         <Button
           variant="outline"
@@ -689,7 +682,7 @@ function TutorialReplayCard() {
           disabled={replaying}
           data-testid="button-replay-tutorial"
         >
-          {replaying ? "…" : "Revoir"}
+          {replaying ? "…" : t("profile.tutorial_replay")}
         </Button>
       </CardContent>
     </Card>

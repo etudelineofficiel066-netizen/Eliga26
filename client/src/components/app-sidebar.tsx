@@ -1,32 +1,34 @@
 import { Link, useLocation } from "wouter";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
-  SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Trophy, LayoutDashboard, MessageSquare, Users, Search, Plus, LogOut, Swords, BarChart3, User, Store, Sword, Clapperboard } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-
-const navItems = [
-  { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Mon profil", url: "/profile", icon: User },
-  { title: "Mes tournois", url: "/tournaments", icon: Trophy },
-  { title: "Rechercher", url: "/search", icon: Search },
-  { title: "Créer un tournoi", url: "/create-tournament", icon: Plus },
-  { title: "eLIGA Clips", url: "/clips", icon: Clapperboard },
-  { title: "Messages", url: "/messages", icon: MessageSquare },
-  { title: "Amis", url: "/friends", icon: Users },
-  { title: "Mes matchs", url: "/matches", icon: Swords },
-  { title: "Statistiques", url: "/stats", icon: BarChart3 },
-  { title: "Marché", url: "/market", icon: Store },
-  { title: "Défis", url: "/challenges", icon: Sword },
-];
+import { useLocale } from "@/lib/locale";
 
 export function AppSidebar() {
   const { user, logout } = useAuth();
   const [location] = useLocation();
+  const { t } = useLocale();
+
+  const navItems = [
+    { key: "nav.dashboard", url: "/dashboard", icon: LayoutDashboard },
+    { key: "nav.profile", url: "/profile", icon: User },
+    { key: "nav.tournaments", url: "/tournaments", icon: Trophy },
+    { key: "nav.search", url: "/search", icon: Search },
+    { key: "nav.create_tournament", url: "/create-tournament", icon: Plus },
+    { key: "nav.clips", url: "/clips", icon: Clapperboard },
+    { key: "nav.messages", url: "/messages", icon: MessageSquare },
+    { key: "nav.friends", url: "/friends", icon: Users },
+    { key: "nav.matches", url: "/matches", icon: Swords },
+    { key: "nav.stats", url: "/stats", icon: BarChart3 },
+    { key: "nav.market", url: "/market", icon: Store },
+    { key: "nav.challenges", url: "/challenges", icon: Sword },
+  ];
 
   const { data: friendReqData } = useQuery<{ count: number }>({
     queryKey: ["/api/friends/requests/count"],
@@ -62,22 +64,25 @@ export function AppSidebar() {
         <SidebarGroup className="py-0">
           <SidebarGroupContent className="py-0">
             <SidebarMenu className="gap-0">
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location === item.url} className="py-1">
-                    <Link href={item.url} data-testid={`nav-${item.title.toLowerCase().replace(/\s/g, "-")}`}>
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                      {item.title === "Amis" && friendReqData?.count != null && friendReqData.count > 0 && (
-                        <Badge className="ml-auto text-xs">{friendReqData.count}</Badge>
-                      )}
-                      {item.title === "Messages" && notifData?.count != null && notifData.count > 0 && (
-                        <Badge className="ml-auto text-xs">{notifData.count}</Badge>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {navItems.map((item) => {
+                const title = t(item.key);
+                return (
+                  <SidebarMenuItem key={item.key}>
+                    <SidebarMenuButton asChild isActive={location === item.url} className="py-1">
+                      <Link href={item.url} data-testid={`nav-${item.url.replace("/", "").replace("-", "-")}`}>
+                        <item.icon className="w-4 h-4" />
+                        <span>{title}</span>
+                        {item.key === "nav.friends" && friendReqData?.count != null && friendReqData.count > 0 && (
+                          <Badge className="ml-auto text-xs">{friendReqData.count}</Badge>
+                        )}
+                        {item.key === "nav.messages" && notifData?.count != null && notifData.count > 0 && (
+                          <Badge className="ml-auto text-xs">{notifData.count}</Badge>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

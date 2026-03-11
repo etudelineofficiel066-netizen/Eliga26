@@ -42,15 +42,15 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
       return (
         <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", fontFamily: "sans-serif", background: "#f9fafb" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: "#111" }}>Une erreur est survenue</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: "#111" }}>Something went wrong</h1>
           <p style={{ color: "#666", marginBottom: 24, textAlign: "center", maxWidth: 400 }}>
-            L'application a rencontré un problème. Rafraîchissez la page pour réessayer.
+            The application encountered an error. Refresh the page to try again.
           </p>
           <pre style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, padding: "1rem", fontSize: 12, color: "#dc2626", maxWidth: 500, overflow: "auto", marginBottom: 24 }}>
             {(this.state.error as Error).message}
           </pre>
           <button onClick={() => window.location.reload()} style={{ background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, padding: "0.75rem 2rem", fontSize: 16, cursor: "pointer", fontWeight: 600 }}>
-            Rafraîchir
+            Refresh
           </button>
         </div>
       );
@@ -149,7 +149,7 @@ function AppContent() {
                   onClick={() => window.history.back()}
                   className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
                 >
-                  ← Retour admin
+                  ← Admin
                 </button>
                 <span className="text-xs text-muted-foreground">|</span>
                 <span className="text-xs font-semibold text-primary">eLIGA Admin</span>

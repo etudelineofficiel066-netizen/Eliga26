@@ -11,13 +11,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Users, UserPlus, Check, Plus, MessageSquare, FolderPlus, UserCheck, UserMinus, Sword } from "lucide-react";
 import { Link } from "wouter";
+import { useLocale } from "@/lib/locale";
 
 export default function Friends() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLocale();
   const [phone, setPhone] = useState("");
   const [groupName, setGroupName] = useState("");
-  const [selectedGroupId, setSelectedGroupId] = useState("");
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
 
   const { data: friends, isLoading: loadingF } = useQuery<any[]>({ queryKey: ["/api/friends"] });
@@ -29,9 +30,9 @@ export default function Friends() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
       setPhone("");
-      toast({ title: "Invitation envoyée !" });
+      toast({ title: t("friends.invited") });
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("common.error"), description: e.message, variant: "destructive" }),
   });
 
   const acceptMutation = useMutation({
@@ -40,9 +41,9 @@ export default function Friends() {
       queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
       queryClient.invalidateQueries({ queryKey: ["/api/friends/requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/friends/requests/count"] });
-      toast({ title: "Ami accepté !" });
+      toast({ title: t("friends.accepted") });
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("common.error"), description: e.message, variant: "destructive" }),
   });
 
   const createGroupMutation = useMutation({
@@ -51,9 +52,9 @@ export default function Friends() {
       queryClient.invalidateQueries({ queryKey: ["/api/groups"] });
       setGroupName("");
       setGroupDialogOpen(false);
-      toast({ title: "Groupe créé !" });
+      toast({ title: t("friends.group_created") });
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("common.error"), description: e.message, variant: "destructive" }),
   });
 
   const addToGroupMutation = useMutation({
@@ -61,18 +62,18 @@ export default function Friends() {
       apiRequest("POST", `/api/groups/${groupId}/members`, { friendId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/groups"] });
-      toast({ title: "Ami ajouté au groupe !" });
+      toast({ title: t("friends.added_to_group") });
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("common.error"), description: e.message, variant: "destructive" }),
   });
 
   const removeFriendMutation = useMutation({
     mutationFn: (friendId: string) => apiRequest("DELETE", `/api/friends/${friendId}`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
-      toast({ title: "Ami retiré" });
+      toast({ title: t("friends.removed") });
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("common.error"), description: e.message, variant: "destructive" }),
   });
 
   return (
@@ -82,8 +83,8 @@ export default function Friends() {
           <Users className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Amis</h1>
-          <p className="text-sm text-muted-foreground">Gérez vos amis et groupes</p>
+          <h1 className="text-2xl font-bold">{t("friends.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("friends.subtitle")}</p>
         </div>
       </div>
 
@@ -92,13 +93,13 @@ export default function Friends() {
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <UserPlus className="w-4 h-4 text-primary" />
-            Inviter un ami
+            {t("friends.add_title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
             <Input
-              placeholder="Numéro de téléphone de votre ami..."
+              placeholder={t("friends.phone_placeholder")}
               value={phone}
               onChange={e => setPhone(e.target.value)}
               data-testid="input-friend-phone"
@@ -109,10 +110,10 @@ export default function Friends() {
               disabled={!phone.trim() || addFriendMutation.isPending}
               data-testid="button-add-friend"
             >
-              {addFriendMutation.isPending ? "..." : "Inviter"}
+              {addFriendMutation.isPending ? "..." : t("friends.invite")}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">L'invitation est envoyée par numéro de téléphone</p>
+          <p className="text-xs text-muted-foreground mt-2">{t("friends.invite_note")}</p>
         </CardContent>
       </Card>
 
@@ -122,7 +123,7 @@ export default function Friends() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <UserCheck className="w-4 h-4 text-amber-500" />
-              Demandes d'amis
+              {t("friends.requests")}
               <Badge className="text-xs">{requests.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -141,7 +142,7 @@ export default function Friends() {
                 </div>
                 <Button size="sm" onClick={() => acceptMutation.mutate(req.id)} disabled={acceptMutation.isPending} data-testid={`button-accept-${req.id}`}>
                   <Check className="w-4 h-4 mr-1" />
-                  Accepter
+                  {t("friends.accept")}
                 </Button>
               </div>
             ))}
@@ -155,7 +156,7 @@ export default function Friends() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Users className="w-4 h-4 text-primary" />
-              Mes amis ({friends?.length ?? 0})
+              {t("friends.my_friends")} ({friends?.length ?? 0})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -166,7 +167,7 @@ export default function Friends() {
             ) : friends?.length === 0 ? (
               <div className="text-center py-6">
                 <Users className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Aucun ami pour l'instant</p>
+                <p className="text-sm text-muted-foreground">{t("friends.no_friends")}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -184,21 +185,20 @@ export default function Friends() {
                     </div>
                     <div className="flex gap-1">
                       <Link href={`/challenges?challenge=${f.friend.id}&pseudo=${encodeURIComponent(f.friend.pseudo)}`}>
-                        <Button size="icon" variant="ghost" title="Défier" data-testid={`button-challenge-${f.friend.id}`}>
+                        <Button size="icon" variant="ghost" data-testid={`button-challenge-${f.friend.id}`}>
                           <Sword className="w-4 h-4 text-primary" />
                         </Button>
                       </Link>
                       <Link href={`/messages?with=${f.friend.id}`}>
-                        <Button size="icon" variant="ghost" title="Message" data-testid={`button-message-${f.friend.id}`}>
+                        <Button size="icon" variant="ghost" data-testid={`button-message-${f.friend.id}`}>
                           <MessageSquare className="w-4 h-4" />
                         </Button>
                       </Link>
                       <Button
                         size="icon"
                         variant="ghost"
-                        title="Retirer"
                         onClick={() => {
-                          if (window.confirm(`Retirer ${f.friend.pseudo} de vos amis ?`)) {
+                          if (window.confirm(`${t("friends.remove_confirm")} ${f.friend.pseudo} ${t("friends.from_friends")}`)) {
                             removeFriendMutation.mutate(f.id);
                           }
                         }}
@@ -221,22 +221,22 @@ export default function Friends() {
           <CardHeader className="pb-3 flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <FolderPlus className="w-4 h-4 text-primary" />
-              Groupes d'amis
+              {t("friends.groups")}
             </CardTitle>
             <Dialog open={groupDialogOpen} onOpenChange={setGroupDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" variant="outline" data-testid="button-create-group">
                   <Plus className="w-3 h-3 mr-1" />
-                  Créer
+                  {t("friends.create_group")}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Créer un groupe d'amis</DialogTitle>
+                  <DialogTitle>{t("friends.group_dialog_title")}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <Input
-                    placeholder="Nom du groupe..."
+                    placeholder={t("friends.group_name_placeholder")}
                     value={groupName}
                     onChange={e => setGroupName(e.target.value)}
                     data-testid="input-group-name"
@@ -247,7 +247,7 @@ export default function Friends() {
                     className="w-full"
                     data-testid="button-submit-group"
                   >
-                    {createGroupMutation.isPending ? "Création..." : "Créer le groupe"}
+                    {createGroupMutation.isPending ? t("friends.group_creating") : t("friends.group_create")}
                   </Button>
                 </div>
               </DialogContent>
@@ -261,7 +261,7 @@ export default function Friends() {
             ) : groups?.length === 0 ? (
               <div className="text-center py-6">
                 <FolderPlus className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Aucun groupe créé</p>
+                <p className="text-sm text-muted-foreground">{t("friends.no_groups")}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -269,7 +269,7 @@ export default function Friends() {
                   <div key={g.id} className="p-3 rounded-lg border border-border" data-testid={`group-${g.id}`}>
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <p className="text-sm font-medium">{g.name}</p>
-                      <Badge variant="outline" className="text-xs">{g.members.length} membres</Badge>
+                      <Badge variant="outline" className="text-xs">{g.members.length} {t("friends.members")}</Badge>
                     </div>
                     <div className="flex flex-wrap gap-1 mb-2">
                       {g.members.slice(0, 5).map((m: any) => (
@@ -287,7 +287,7 @@ export default function Friends() {
                         }}
                         data-testid={`select-group-member-${g.id}`}
                       >
-                        <option value="">+ Ajouter un ami...</option>
+                        <option value="">{t("friends.add_to_group")}</option>
                         {friends.filter(f => !g.members.some((m: any) => m.id === f.friend.id)).map(f => (
                           <option key={f.friend.id} value={f.friend.id}>{f.friend.pseudo}</option>
                         ))}

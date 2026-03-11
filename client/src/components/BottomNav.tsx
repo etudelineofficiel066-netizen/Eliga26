@@ -1,17 +1,19 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Trophy, MessageSquare, Swords, Clapperboard } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-
-const items = [
-  { label: "Accueil", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Tournois", href: "/tournaments", icon: Trophy },
-  { label: "Clips", href: "/clips", icon: Clapperboard },
-  { label: "Matchs", href: "/matches", icon: Swords },
-  { label: "Messages", href: "/messages", icon: MessageSquare },
-];
+import { useLocale } from "@/lib/locale";
 
 export function BottomNav() {
   const [location] = useLocation();
+  const { t } = useLocale();
+
+  const items = [
+    { key: "nav.home", href: "/dashboard", icon: LayoutDashboard },
+    { key: "nav.tournaments", href: "/tournaments", icon: Trophy },
+    { key: "nav.clips", href: "/clips", icon: Clapperboard },
+    { key: "nav.matches", href: "/matches", icon: Swords },
+    { key: "nav.messages", href: "/messages", icon: MessageSquare },
+  ];
 
   const { data: notifData } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
@@ -24,7 +26,8 @@ export function BottomNav() {
       data-testid="bottom-nav"
     >
       <div className="flex items-center justify-around h-16">
-        {items.map(({ label, href, icon: Icon }) => {
+        {items.map(({ key, href, icon: Icon }) => {
+          const label = t(key);
           const isActive =
             location === href ||
             (href === "/dashboard" && (location === "/" || location === ""));
@@ -40,7 +43,7 @@ export function BottomNav() {
                     ? "text-primary"
                     : "text-muted-foreground active:scale-90"
                 }`}
-                data-testid={`bottom-nav-${label.toLowerCase()}`}
+                data-testid={`bottom-nav-${href.replace("/", "")}`}
               >
                 <div className="relative">
                   <Icon className={`w-5 h-5 ${isActive ? "stroke-[2.5]" : ""}`} />
