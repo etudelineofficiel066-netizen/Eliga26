@@ -86,76 +86,93 @@ function Fireworks() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const particles: any[] = [];
-    const colors = ["#FFD700","#FFA500","#FF6347","#00CED1","#7B68EE","#32CD32","#FF69B4"];
-
-    function launch(x: number, y: number) {
-      for (let i = 0; i < 50; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 2 + Math.random() * 4;
-        particles.push({
-          x, y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          alpha: 1,
-          size: 3 + Math.random() * 3,
-        });
-      }
-    }
-
-    let frame = 0;
-    const launches = [
-      { x: 0.2, y: 0.35, t: 10 },
-      { x: 0.5, y: 0.25, t: 40 },
-      { x: 0.8, y: 0.35, t: 70 },
-      { x: 0.35, y: 0.5,  t: 100 },
-      { x: 0.65, y: 0.45, t: 120 },
-      { x: 0.15, y: 0.55, t: 150 },
-      { x: 0.85, y: 0.55, t: 170 },
-    ];
 
     let animId: number;
-    function animate() {
-      ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
-      frame++;
+    let timerId: ReturnType<typeof setTimeout>;
 
-      for (const l of launches) {
-        if (frame === l.t) launch(canvas!.width * l.x, canvas!.height * l.y);
+    const start = () => {
+      // Get dimensions from parent container once it's laid out
+      const parent = canvas.parentElement;
+      const w = parent?.offsetWidth || 400;
+      const h = parent?.offsetHeight || 180;
+
+      // If still not laid out, retry after one frame
+      if (w === 0 || h === 0) {
+        timerId = setTimeout(start, 30);
+        return;
       }
 
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy + 0.06;
-        p.vy *= 0.98;
-        p.vx *= 0.98;
-        p.alpha -= 0.012;
-        if (p.alpha <= 0) { particles.splice(i, 1); continue; }
-        ctx!.globalAlpha = p.alpha;
-        ctx!.fillStyle = p.color;
-        ctx!.beginPath();
-        ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx!.fill();
-      }
-      ctx!.globalAlpha = 1;
+      canvas.width = w;
+      canvas.height = h;
 
-      if (frame < 250) animId = requestAnimationFrame(animate);
-    }
-    animId = requestAnimationFrame(animate);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const particles: any[] = [];
+      const colors = ["#FFD700","#FFA500","#FF6347","#00CED1","#7B68EE","#32CD32","#FF69B4"];
+
+      function launch(x: number, y: number) {
+        for (let i = 0; i < 50; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 2 + Math.random() * 4;
+          particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            alpha: 1,
+            size: 3 + Math.random() * 3,
+          });
+        }
+      }
+
+      let frame = 0;
+      const launches = [
+        { x: 0.2, y: 0.35, t: 10 },
+        { x: 0.5, y: 0.25, t: 40 },
+        { x: 0.8, y: 0.35, t: 70 },
+        { x: 0.35, y: 0.5,  t: 100 },
+        { x: 0.65, y: 0.45, t: 120 },
+        { x: 0.15, y: 0.55, t: 150 },
+        { x: 0.85, y: 0.55, t: 170 },
+      ];
+
+      function animate() {
+        ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
+        frame++;
+
+        for (const l of launches) {
+          if (frame === l.t) launch(canvas!.width * l.x, canvas!.height * l.y);
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy + 0.06;
+          p.vy *= 0.98;
+          p.vx *= 0.98;
+          p.alpha -= 0.012;
+          if (p.alpha <= 0) { particles.splice(i, 1); continue; }
+          ctx!.globalAlpha = p.alpha;
+          ctx!.fillStyle = p.color;
+          ctx!.beginPath();
+          ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx!.fill();
+        }
+        ctx!.globalAlpha = 1;
+
+        if (frame < 250) animId = requestAnimationFrame(animate);
+      }
+
+      animId = requestAnimationFrame(animate);
+    };
+
+    // Small delay so the DOM is fully painted before measuring dimensions
+    timerId = setTimeout(start, 50);
+
     return () => {
+      clearTimeout(timerId);
       cancelAnimationFrame(animId);
-      window.removeEventListener("resize", resize);
     };
   }, []);
 
