@@ -54,7 +54,7 @@ export default function Home() {
         setBlockedInfo({ message: e.message });
       } else {
         setBlockedInfo(null);
-        toast({ title: "Erreur de connexion", description: e.message, variant: "destructive" });
+        toast({ title: t("error.login"), description: e.message, variant: "destructive" });
       }
     },
   });
@@ -62,7 +62,7 @@ export default function Home() {
   const registerMutation = useMutation({
     mutationFn: (data: z.infer<typeof registerSchema>) => apiRequest("POST", "/api/auth/register", data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] }); },
-    onError: (e: any) => toast({ title: "Erreur d'inscription", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("error.register"), description: e.message, variant: "destructive" }),
   });
 
   return (
@@ -72,7 +72,6 @@ export default function Home() {
       </div>
       {/* Left / Hero panel */}
       <div className="relative lg:flex-1 lg:sticky lg:top-0 lg:h-screen overflow-hidden bg-gradient-to-br from-primary via-primary/80 to-primary/50 flex flex-col items-center justify-center px-8 py-10 lg:py-0">
-        {/* Decorative blobs */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
@@ -80,7 +79,6 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 text-center max-w-md">
-          {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-5">
             <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-xl border border-white/20">
               <Trophy className="w-8 h-8 text-white" />
@@ -93,36 +91,23 @@ export default function Home() {
             {t("app.description")}
           </p>
 
-          {/* Hero image */}
           <div className="flex flex-col items-center mb-4">
             <img
               src={heroImage}
-              alt="Joueur eFootball avec manette"
+              alt="eFootball player"
               className="w-36 h-36 sm:w-44 sm:h-44 lg:w-56 lg:h-56 rounded-3xl shadow-2xl object-cover border-4 border-white/20"
             />
             <PWAInstallButton variant="hero" />
           </div>
-
         </div>
       </div>
 
       {/* Right / Auth panel */}
       <div className="flex-1 flex items-center justify-center p-5 sm:p-8 lg:max-w-lg lg:mx-auto lg:w-full">
         <div className="w-full max-w-md">
-          <div className="mb-6 text-center lg:text-left flex items-start justify-between">
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-foreground">{t("home.welcome")}</h2>
-              <p className="text-muted-foreground text-sm mt-1">{t("home.subtitle")}</p>
-            </div>
-            <button
-              onClick={() => setLanguage(language === "fr" ? "en" : "fr")}
-              className="ml-2 p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition"
-              title="Toggle language"
-              data-testid="button-toggle-language"
-            >
-              <Globe className="w-4 h-4" />
-              <span className="text-xs font-bold mt-1">{language === "fr" ? "EN" : "FR"}</span>
-            </button>
+          <div className="mb-6 text-center lg:text-left">
+            <h2 className="text-2xl font-bold text-foreground">{t("home.welcome")}</h2>
+            <p className="text-muted-foreground text-sm mt-1">{t("home.subtitle")}</p>
           </div>
 
           <Tabs defaultValue="login">
@@ -131,6 +116,7 @@ export default function Home() {
               <TabsTrigger value="register" className="flex-1" data-testid="tab-register">{t("register.label")}</TabsTrigger>
             </TabsList>
 
+            {/* ── Login ── */}
             <TabsContent value="login">
               <Card>
                 <CardContent className="pt-5">
@@ -138,9 +124,9 @@ export default function Home() {
                     <div className="mb-4 flex items-start gap-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4" data-testid="alert-account-blocked">
                       <ShieldOff className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-bold text-sm text-red-700 dark:text-red-400">Compte bloqué définitivement</p>
+                        <p className="font-bold text-sm text-red-700 dark:text-red-400">{t("login.blocked_title")}</p>
                         <p className="text-xs text-red-600 dark:text-red-500 mt-1 leading-relaxed">
-                          Votre compte a été bloqué suite à 3 rejets de paiement pour fraude présumée. Aucune réclamation ne sera acceptée.
+                          {t("login.blocked_message")}
                         </p>
                       </div>
                     </div>
@@ -151,7 +137,7 @@ export default function Home() {
                         <FormItem>
                           <FormLabel>{t("login.username")}</FormLabel>
                           <FormControl>
-                            <Input placeholder={language === "fr" ? "votre_username" : "your_username"} data-testid="input-login-username" autoComplete="username" {...field} />
+                            <Input placeholder={t("login.username_placeholder")} data-testid="input-login-username" autoComplete="username" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -174,6 +160,7 @@ export default function Home() {
               </Card>
             </TabsContent>
 
+            {/* ── Register ── */}
             <TabsContent value="register">
               <Card>
                 <CardContent className="pt-5">
@@ -184,7 +171,7 @@ export default function Home() {
                           <FormItem className="col-span-2 sm:col-span-1">
                             <FormLabel>{t("register.username")}</FormLabel>
                             <FormControl>
-                              <Input placeholder={language === "fr" ? "username_efootball" : "username_efootball"} data-testid="input-reg-username" autoComplete="username" {...field} />
+                              <Input placeholder={t("register.username_placeholder")} data-testid="input-reg-username" autoComplete="username" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -193,7 +180,7 @@ export default function Home() {
                           <FormItem className="col-span-2 sm:col-span-1">
                             <FormLabel>{t("register.pseudo")}</FormLabel>
                             <FormControl>
-                              <Input placeholder={language === "fr" ? "MonPseudo" : "MyNickname"} data-testid="input-reg-pseudo" {...field} />
+                              <Input placeholder={t("register.pseudo_placeholder")} data-testid="input-reg-pseudo" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -235,12 +222,41 @@ export default function Home() {
                           <FormItem>
                             <FormLabel>{t("register.region")}</FormLabel>
                             <FormControl>
-                              <Input placeholder={language === "fr" ? "Votre région" : "Your region"} data-testid="input-reg-region" {...field} />
+                              <Input placeholder={t("register.region_placeholder")} data-testid="input-reg-region" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
                       </div>
+
+                      {/* ── Language toggle — right below region field ── */}
+                      <div className="flex items-center justify-between pt-1 pb-1 px-1 bg-muted/40 rounded-xl border border-border">
+                        <div className="flex items-center gap-2">
+                          <Globe className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground font-medium">
+                            {language === "fr" ? "Langue / Language" : "Language / Langue"}
+                          </span>
+                        </div>
+                        <div className="flex rounded-lg overflow-hidden border border-border">
+                          <button
+                            type="button"
+                            onClick={() => setLanguage("fr")}
+                            className={`px-3 py-1.5 text-xs font-bold transition-colors ${language === "fr" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                            data-testid="button-lang-fr"
+                          >
+                            🇫🇷 FR
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setLanguage("en")}
+                            className={`px-3 py-1.5 text-xs font-bold transition-colors ${language === "en" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                            data-testid="button-lang-en"
+                          >
+                            🇬🇧 EN
+                          </button>
+                        </div>
+                      </div>
+
                       <Button type="submit" className="w-full" disabled={registerMutation.isPending} data-testid="button-register">
                         {registerMutation.isPending ? t("register.creating") : t("register.button")}
                       </Button>

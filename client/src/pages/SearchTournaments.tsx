@@ -13,8 +13,10 @@ import { Link, useLocation } from "wouter";
 import { Search, Lock, Globe, Users, Gamepad2, Clock, Trophy, CheckCircle2, LogIn, Sparkles, Star, Shield, Coins, Sword, ScanLine, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import jsQR from "jsqr";
+import { useLocale } from "@/lib/locale";
 
 function QrScannerModal({ open, onClose, onDetected }: { open: boolean; onClose: () => void; onDetected: (code: string) => void }) {
+  const { t } = useLocale();
   const [status, setStatus] = useState<"loading" | "scanning" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -80,7 +82,7 @@ function QrScannerModal({ open, onClose, onDetected }: { open: boolean; onClose:
       } catch {
         if (active) {
           setStatus("error");
-          setErrorMsg("Impossible d'accéder à la caméra. Vérifiez les autorisations de votre navigateur.");
+          setErrorMsg(t("search.qr_error"));
         }
       }
     };
@@ -103,7 +105,7 @@ function QrScannerModal({ open, onClose, onDetected }: { open: boolean; onClose:
         <DialogHeader className="px-4 pt-4 pb-2">
           <DialogTitle className="flex items-center gap-2">
             <ScanLine className="w-5 h-5 text-primary" />
-            Scanner le QR code
+            {t("search.qr_title")}
           </DialogTitle>
         </DialogHeader>
 
@@ -111,7 +113,7 @@ function QrScannerModal({ open, onClose, onDetected }: { open: boolean; onClose:
           {status === "error" ? (
             <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-center space-y-2">
               <p className="text-sm text-destructive font-medium">{errorMsg}</p>
-              <p className="text-xs text-muted-foreground">Entrez le code manuellement à la place</p>
+              <p className="text-xs text-muted-foreground">{t("search.qr_manual")}</p>
             </div>
           ) : (
             <div className="relative rounded-xl overflow-hidden border-2 border-primary/30 bg-black" style={{ minHeight: 300 }}>
@@ -119,7 +121,7 @@ function QrScannerModal({ open, onClose, onDetected }: { open: boolean; onClose:
                 <div className="absolute inset-0 flex items-center justify-center z-10">
                   <div className="flex flex-col items-center gap-3 text-white/70">
                     <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <p className="text-sm">Démarrage de la caméra...</p>
+                    <p className="text-sm">{t("search.qr_starting")}</p>
                   </div>
                 </div>
               )}
@@ -137,7 +139,7 @@ function QrScannerModal({ open, onClose, onDetected }: { open: boolean; onClose:
                   <div className="w-52 h-52 border-2 border-primary rounded-2xl" />
                   <div className="absolute bottom-3 left-0 right-0 text-center">
                     <span className="text-xs text-white bg-black/50 px-3 py-1 rounded-full">
-                      Pointez vers le QR code eLIGA
+                      {t("search.qr_point")}
                     </span>
                   </div>
                 </div>
@@ -146,7 +148,7 @@ function QrScannerModal({ open, onClose, onDetected }: { open: boolean; onClose:
           )}
 
           <Button variant="outline" className="w-full gap-2" onClick={onClose} data-testid="button-close-scanner">
-            <X className="w-4 h-4" /> Fermer
+            <X className="w-4 h-4" /> {t("search.qr_close")}
           </Button>
         </div>
       </DialogContent>
@@ -157,6 +159,7 @@ function QrScannerModal({ open, onClose, onDetected }: { open: boolean; onClose:
 export default function SearchTournaments() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLocale();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   const [privateCode, setPrivateCode] = useState("");

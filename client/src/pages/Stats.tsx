@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
   BarChart3, Trophy, Swords, Target, TrendingUp, Shield, Minus, Star,
-  Lock, CheckCircle2, Sparkles, Banknote, ChevronRight, Flame, Zap, Medal
+  Lock, CheckCircle2, Sparkles, Banknote, ChevronRight, Flame, Zap, Medal, X
 } from "lucide-react";
 import { useLocale } from "@/lib/locale";
 
@@ -127,23 +127,26 @@ function Fireworks() {
       }
 
       let frame = 0;
-      const launches = [
+      // Launch positions spread across the canvas — repeated every 200 frames
+      const launchPattern = [
         { x: 0.2, y: 0.35, t: 10 },
         { x: 0.5, y: 0.25, t: 40 },
         { x: 0.8, y: 0.35, t: 70 },
         { x: 0.35, y: 0.5,  t: 100 },
-        { x: 0.65, y: 0.45, t: 120 },
-        { x: 0.15, y: 0.55, t: 150 },
-        { x: 0.85, y: 0.55, t: 170 },
+        { x: 0.65, y: 0.45, t: 130 },
+        { x: 0.15, y: 0.55, t: 160 },
+        { x: 0.85, y: 0.55, t: 185 },
       ];
 
       function animate() {
         ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
-        frame++;
 
-        for (const l of launches) {
-          if (frame === l.t) launch(canvas!.width * l.x, canvas!.height * l.y);
+        // Loop every 200 frames — infinite fireworks
+        const cycleFrame = frame % 200;
+        for (const l of launchPattern) {
+          if (cycleFrame === l.t) launch(canvas!.width * l.x, canvas!.height * l.y);
         }
+        frame++;
 
         for (let i = particles.length - 1; i >= 0; i--) {
           const p = particles[i];
@@ -161,7 +164,8 @@ function Fireworks() {
         }
         ctx!.globalAlpha = 1;
 
-        if (frame < 250) animId = requestAnimationFrame(animate);
+        // Loop forever until cleanup
+        animId = requestAnimationFrame(animate);
       }
 
       animId = requestAnimationFrame(animate);
@@ -237,6 +241,7 @@ function TrophyCard({ reward, t }: { reward: any; t: (key: string) => string }) 
 export default function Stats() {
   const { user } = useAuth();
   const { t } = useLocale();
+  const [champDismissed, setChampDismissed] = useState(false);
 
   const TIERS = getTiers(t);
 
@@ -290,9 +295,17 @@ export default function Stats() {
         </div>
       ) : (
         <>
-          {hasRecentGold && (
+          {hasRecentGold && !champDismissed && (
             <div className="relative rounded-2xl overflow-hidden">
               <div className="relative z-20 bg-gradient-to-br from-yellow-400/20 to-amber-500/20 border-2 border-yellow-400 rounded-2xl p-5 text-center">
+                <button
+                  onClick={() => setChampDismissed(true)}
+                  className="absolute top-2 right-2 z-30 p-1.5 rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors"
+                  data-testid="button-dismiss-champion"
+                  title={t("common.close")}
+                >
+                  <X className="w-4 h-4" />
+                </button>
                 <p className="text-3xl mb-1">🏆</p>
                 <p className="text-xl font-black text-yellow-700 dark:text-yellow-400">{t("stats.champion")}</p>
                 <p className="text-sm text-muted-foreground mt-1">{t("stats.champion_msg")}</p>
