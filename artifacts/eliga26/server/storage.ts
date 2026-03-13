@@ -373,10 +373,7 @@ export class PgStorage implements IStorage {
     await pool.query("DELETE FROM tournament_matches WHERE tournament_id=$1", [id]);
     await pool.query("DELETE FROM tournament_chats WHERE tournament_id=$1", [id]);
     await pool.query("DELETE FROM notifications WHERE tournament_id=$1", [id]);
-    await pool.query("DELETE FROM marketplace_cart WHERE listing_id IN (SELECT id FROM marketplace_listings WHERE seller_id IN (SELECT creator_id FROM tournaments WHERE id=$1))", [id]);
-    await pool.query("DELETE FROM tournament_rewards WHERE tournament_id=$1", [id]);
-    // Nettoyage supplémentaire pour les références croisées possibles
-    await pool.query("DELETE FROM coin_purchases WHERE userId IN (SELECT creator_id FROM tournaments WHERE id=$1) AND status='pending'", [id]);
+    // Les récompenses (tournament_rewards) sont conservées même après suppression du tournoi
     await pool.query("DELETE FROM tournaments WHERE id=$1", [id]);
   }
 

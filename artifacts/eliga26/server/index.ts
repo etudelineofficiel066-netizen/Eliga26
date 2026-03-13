@@ -428,6 +428,33 @@ async function initDb() {
     await pool.query(`ALTER TABLE clips ADD COLUMN IF NOT EXISTS is_featured boolean NOT NULL DEFAULT false`);
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS can_post_clips boolean NOT NULL DEFAULT true`);
 
+    // Migration: rendre tournament_id nullable dans tournament_rewards pour conserver les récompenses après suppression d'un tournoi
+    await pool.query(`ALTER TABLE tournament_rewards ALTER COLUMN tournament_id DROP NOT NULL`);
+    // Supprimer l'ancienne contrainte FK et en ajouter une nouvelle avec ON DELETE SET NULL
+    await pool.query(`
+      DO $$
+      BEGIN
+        -- Supprimer l'ancienne contrainte si elle existe (sans ON DELETE SET NULL)
+        IF EXISTS (
+          SELECT 1 FROM information_schema.table_constraints
+          WHERE table_name='tournament_rewards' AND constraint_type='FOREIGN KEY'
+          AND constraint_name='tournament_rewards_tournament_id_fkey'
+        ) THEN
+          ALTER TABLE tournament_rewards DROP CONSTRAINT tournament_rewards_tournament_id_fkey;
+        END IF;
+        -- Ajouter la nouvelle contrainte avec ON DELETE SET NULL
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.table_constraints
+          WHERE table_name='tournament_rewards' AND constraint_type='FOREIGN KEY'
+          AND constraint_name='tournament_rewards_tournament_id_fkey_setnull'
+        ) THEN
+          ALTER TABLE tournament_rewards ADD CONSTRAINT tournament_rewards_tournament_id_fkey_setnull
+            FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE SET NULL;
+        END IF;
+      END
+      $$;
+    `);
+
     // Seed admin account
     const ADMIN_AVATAR = "/eliga-admin-avatar.png";
     const adminCheck = await pool.query("SELECT id FROM users WHERE username=$1", ["Maodoka65"]);

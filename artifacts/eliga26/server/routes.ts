@@ -593,15 +593,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.delete("/api/tournaments/:id", async (req, res) => {
     try {
       const reqUser = await requireAuthUser(req, res); if (!reqUser) return;
-      
-      // Seul l'administrateur peut supprimer des tournois
-      if (!reqUser.isAdmin) {
-        return res.status(403).json({ error: "Seul un administrateur peut supprimer des tournois" });
-      }
 
       const tournament = await storage.getTournamentById(req.params.id);
       if (!tournament) return res.status(404).json({ error: "Tournoi introuvable" });
-      
+
+      // Le créateur ou un administrateur peuvent supprimer le tournoi, quel que soit son statut
+      if (tournament.creatorId !== reqUser.id && !reqUser.isAdmin) {
+        return res.status(403).json({ error: "Seul le créateur ou un administrateur peut supprimer ce tournoi" });
+      }
+
       await storage.deleteTournament(req.params.id);
       res.json({ success: true });
     } catch (e: any) {

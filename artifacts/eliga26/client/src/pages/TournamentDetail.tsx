@@ -927,12 +927,18 @@ export default function TournamentDetail() {
               <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
                 <span className="text-destructive text-lg leading-none mt-0.5">⚠️</span>
                 <p className="text-sm text-destructive font-medium">
-                  Ce tournoi est {tournament.status === "in_progress" ? "en cours" : "terminé"}. Tous les scores et résultats enregistrés seront définitivement perdus.
+                  Ce tournoi est {tournament.status === "in_progress" ? "en cours" : "terminé"}. Tous les scores et matchs seront définitivement supprimés.
                 </p>
               </div>
             )}
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-green-50 border border-green-200">
+              <span className="text-green-600 text-lg leading-none mt-0.5">🏆</span>
+              <p className="text-sm text-green-700 font-medium">
+                Les récompenses déjà gagnées par les joueurs seront conservées sur leurs profils.
+              </p>
+            </div>
             <p className="text-sm text-muted-foreground">
-              Cette action est irréversible. Tous les participants, matchs et scores seront supprimés.
+              Cette action est irréversible. Les participants et matchs seront supprimés.
             </p>
           </div>
           <DialogFooter>
