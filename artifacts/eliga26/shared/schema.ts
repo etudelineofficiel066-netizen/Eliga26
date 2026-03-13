@@ -126,7 +126,7 @@ export const notifications = pgTable("notifications", {
 export const tournamentRewards = pgTable("tournament_rewards", {
   id: text("id").primaryKey().default("gen_random_uuid()"),
   userId: text("user_id").notNull().references(() => users.id),
-  tournamentId: text("tournament_id").notNull().references(() => tournaments.id),
+  tournamentId: text("tournament_id").references(() => tournaments.id, { onDelete: "set null" }),
   position: integer("position").notNull(),
   badge: text("badge").notNull(),
   rewardLabel: text("reward_label").notNull(),
