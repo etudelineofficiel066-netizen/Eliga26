@@ -48,6 +48,20 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 - `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
 - `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
 
+## Artifacts
+
+### `artifacts/eliga26` (`@workspace/eliga26`)
+
+Full-stack application imported from GitHub (https://github.com/etudelineofficiel066-netizen/Eliga26). This is the original app without any modifications.
+
+- **Type**: Full-stack Express + React/Vite (Vite runs as middleware inside Express)
+- **Entry**: `server/index.ts` — initializes DB, registers routes, starts Express with Vite middleware
+- **Client**: `client/` — React frontend with Tailwind CSS, shadcn/ui
+- **Shared**: `shared/` — Shared types/schemas between server and client
+- **DB**: PostgreSQL (uses Drizzle ORM) — auto-initializes tables on startup
+- **Dev command**: `NODE_ENV=development tsx server/index.ts`
+- **Port**: Assigned by Replit via `PORT` env variable
+
 ## Packages
 
 ### `artifacts/api-server` (`@workspace/api-server`)
