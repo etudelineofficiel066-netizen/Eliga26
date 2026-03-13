@@ -1181,10 +1181,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const t = await pool.query("SELECT id FROM tournaments WHERE id=$1", [req.params.id]);
       if (!t.rows[0]) return res.status(404).json({ error: "Tournoi introuvable" });
-      await pool.query("DELETE FROM notifications WHERE tournament_id=$1", [req.params.id]);
-      await pool.query("DELETE FROM tournament_matches WHERE tournament_id=$1", [req.params.id]);
-      await pool.query("DELETE FROM tournament_participants WHERE tournament_id=$1", [req.params.id]);
-      await pool.query("DELETE FROM tournaments WHERE id=$1", [req.params.id]);
+      await storage.deleteTournament(req.params.id);
       res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
