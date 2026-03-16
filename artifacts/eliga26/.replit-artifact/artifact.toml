@@ -1,0 +1,13 @@
+kind = "web"
+previewPath = "/"
+title = "Eliga26"
+version = "1.0.0"
+id = "eliga26-app"
+
+[[services]]
+localPort = 5000
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "cd artifacts/eliga26 && npm run dev"
